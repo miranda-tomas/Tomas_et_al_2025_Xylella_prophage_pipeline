@@ -1,41 +1,53 @@
 # 06_similarity_heatmap.R
 
+# This script generates a similarity heatmap (based on ANI values) of prophages
+# using a precomputed VIRIDIC matrix.
+
+# Usage: Rscript 06_similarity_heatmap.R <matrix_file.tsv>
+
+# Load required packages
 library(ggplot2)
 library(readr)
 library(pheatmap)
 library(grid)
 
-# Establecer directorio de trabajo (ajustar según corresponda)
-setwd("~/Escritorio/SynologyDrive/Profagos Xylella/Figuras_nuevas")
+# Read command-line arguments
+args <- commandArgs(trailingOnly = TRUE)
+if (length(args) < 1) {
+  stop("Usage: Rscript 06_similarity_heatmap.R <matrix_file.tsv>")
+}
+input_file <- args[1]
 
-# Importar matriz ANI desde archivo TSV
-matriz <- read.csv("matriz_viridic.tsv", sep = "\t", row.names = 1, check.names = FALSE)
+# Load VIRIDIC ANI matrix
+matrix <- read.csv("matrix_viridic.tsv", sep = "\t", row.names = 1, check.names = FALSE)
 
-# Convertir valores de matriz de character a numérico, cambiando coma por punto decimal
-matriz_numerica <- apply(matriz, 2, function(x) gsub(",", ".", x))
-matriz_numerica <- apply(matriz_numerica, 2, as.numeric)
+# Convert from character to numeric (replace commas with dots)
+ani_matrix <- apply(matrix, 2, function(x) gsub(",", ".", x))
+ani_matrix <- apply(ani_matrix, 2, as.numeric)
 
-# Reemplazar NA por 0
-matriz_numerica[is.na(matriz_numerica)] <- 0
+# Replace NA with 0
+ani_matrix[is.na(ani_matrix)] <- 0
 
-# Asignar nombres de fila igual a los nombres de columna (simetría)
-rownames(matriz_numerica) <- colnames(matriz_numerica)
+# Assign row names equal to column names (ensure symmetry)
+rownames(ani_matrix) <- colnames(ani_matrix)
 
-# Definir paleta de colores personalizada para el heatmap
+# Define grayscale color palette
 custom_colors <- colorRampPalette(c("white", "grey", "black"))(100)
 
-# Generar heatmap sin clustering con pheatmap
-p <- pheatmap(matriz_numerica,
-              cluster_rows = FALSE,
-              cluster_cols = FALSE,
-              display_numbers = FALSE,
-              fontsize = 8,
-              color = custom_colors,
-              angle_col = 90)
+# Generate non-clustered heatmap
+heatmap_plot <- pheatmap(
+  ani_matrix,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  display_numbers = FALSE,
+  fontsize = 8,
+  color = custom_colors,
+  angle_col = 90
+)
 
-# Guardar el heatmap como archivo SVG
-svg("matriz_similitud.svg", width = 8, height = 7, bg = "transparent")
+# Save heatmap as SVG file
+svg("similarity_matrix.svg", width = 8, height = 7, bg = "transparent")
 grid.newpage()
-grid.draw(p$gtable)
+grid.draw(heatmap_plot$gtable)
 dev.off()
 
