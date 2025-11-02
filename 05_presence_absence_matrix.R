@@ -1,46 +1,48 @@
 # 05_presence_absence_matrix.R
 
-# Este script genera un heatmap a partir de una matriz de presencia/ausencia
-# de profagos en cepas de Xylella fastidiosa. 
+# This script generates a presence/absence heatmap of prophages across 
+# Xylella fastidiosa strains.
 
-# Uso: Rscript 05_presence_absence_matrix.R <matriz_infeccion_new.tsv>
+# Usage: Rscript 05_presence_absence_matrix.R <matrix_file.tsv>
 
-# Cargar librerías necesarias
+# Load required packages
 library(ggplot2)
 
-# Argumentos
+# Read command-line arguments
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 1) {
-  stop("Uso: Rscript 05_presence_absence_matrix.R <matriz_infeccion_new.tsv>")
+  stop("Uso: Rscript 05_presence_absence_matrix.R <matrix_infeccion_new.tsv>")
 }
 input_file <- args[1]
 
-# Cargar la matriz desde archivo TSV
-matriz <- read.csv(input_file, sep = "\t", header = TRUE, row.names = 1)
+# Load presence/absence matrix
+matrix <- read.csv(input_file, sep = "\t", header = TRUE, row.names = 1)
 
-# Reemplazar NA por 0
-matriz[is.na(matriz)] <- 0
+# Replace NA with 0
+matrix[is.na(matrix)] <- 0
 
-# Convertir a matriz y formato largo
-matriz <- as.matrix(matriz)
-df <- as.data.frame(as.table(matriz))
-colnames(df) <- c("Cepa", "Profago", "Valor")
+# Convert to matrix and then to long format for ggplot
+matrix <- as.matrix(matrix)
+df <- as.data.frame(as.table(matrix))
 
-# Invertir el orden de las cepas para la visualización
-df$Cepa <- factor(df$Cepa, levels = rev(rownames(matriz)))
+# Rename columns for clarity
+colnames(df) <- c("Strain", "Prophage", "Value")
 
-# Asignar Subspecies basado en patrones de nombre
-df$Subspecies <- ifelse(grepl("ST 01|ST 02|ST 75", df$Cepa, ignore.case = TRUE), "fastidiosa",
-                  ifelse(grepl("ST 11|ST 13|ST 14|ST 16|ST 53|ST 69|ST 70|ST 74|ST 78|ST 79|ST 80", df$Cepa, ignore.case = TRUE), "pauca",
-                  ifelse(grepl("ST 05|ST 72", df$Cepa, ignore.case = TRUE), "sandyi",
-                  ifelse(grepl("ST 31|ST 62", df$Cepa, ignore.case = TRUE), "morus",
+# Reverse strain order for better visualization
+df$Strain <- factor(df$Strain, levels = rev(rownames(matrix)))
+
+# Assign subspecies based on strain name patterns
+df$Subspecies <- ifelse(grepl("ST 01|ST 02|ST 75", df$Strain, ignore.case = TRUE), "fastidiosa",
+                  ifelse(grepl("ST 11|ST 13|ST 14|ST 16|ST 53|ST 69|ST 70|ST 74|ST 78|ST 79|ST 80", df$Strain, ignore.case = TRUE), "pauca",
+                  ifelse(grepl("ST 05|ST 72", df$Strain, ignore.case = TRUE), "sandyi",
+                  ifelse(grepl("ST 31|ST 62", df$Strain, ignore.case = TRUE), "morus",
                          "multiplex"))))
 
-# Definir el factor con niveles específicos para el grupo
+# Define subspecies order
 df$Subspecies <- factor(df$Subspecies, levels = c("fastidiosa", "multiplex", "pauca", "sandyi", "morus"))
 
-# Definir paleta de colores para cada subespecie
-colores_subspecies <- c(
+# Define custom color palette for subspecies
+subspecies_colors <- c(
   "fastidiosa" = "#d17b7f",
   "multiplex" = "#8fa3b2",
   "pauca" = "#86b89d",
@@ -48,13 +50,13 @@ colores_subspecies <- c(
   "morus" = "#a888ad"
 )
 
-# Crear heatmap con ggplot2
-ggplot(df, aes(x = Profago, y = Cepa)) +
+# Generate heatmap using ggplot2
+ggplot(df, aes(x = Prophage, y = Strain)) +
   geom_tile(aes(fill = ifelse(Valor == 1, Subspecies, NA)), color = "white") +
   scale_fill_manual(
-    values = colores_subspecies,
+    values = subspecies_colors,
     name = "Subspecies",
-    limits = names(colores_subspecies),
+    limits = names(subspecies_colors),
     na.value = "white",
     guide = guide_legend(title = "Subspecies")
   ) +
@@ -70,5 +72,5 @@ ggplot(df, aes(x = Profago, y = Cepa)) +
   ) +
   labs(x = "PROPHAGE", y = "STRAIN")
 
-# Guardar figura
+# Save plot
 ggsave("presence_absence_heatmap.png", plot = p, width = 10, height = 8, dpi = 300)
