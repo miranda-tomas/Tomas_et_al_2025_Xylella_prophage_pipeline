@@ -21,7 +21,7 @@ library(FSA)
 args <- commandArgs(trailingOnly = TRUE)
 
 if(length(args) == 0) {
-  stop("Error: Debes proporcionar el nombre del archivo CSV.\nUso: Rscript 12_prophage_load_boxplot.R <csv_file>")
+  stop("Error. Usage: Rscript 12_prophage_load_boxplot.R <csv_file>")
 }
 
 csv_file <- args[1]
