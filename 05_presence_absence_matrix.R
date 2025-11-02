@@ -1,20 +1,29 @@
 # 05_presence_absence_matrix.R
 
+# Este script genera un heatmap a partir de una matriz de presencia/ausencia
+# de profagos en cepas de Xylella fastidiosa. 
+
+# Uso: Rscript 05_presence_absence_matrix.R <matriz_infeccion_new.tsv>
+
+# Cargar librerías necesarias
 library(ggplot2)
 
+# Argumentos
+args <- commandArgs(trailingOnly = TRUE)
+if (length(args) < 1) {
+  stop("Uso: Rscript 05_presence_absence_matrix.R <matriz_infeccion_new.tsv>")
+}
+input_file <- args[1]
+
 # Cargar la matriz desde archivo TSV
-matriz <- read.csv("matriz_infeccion_new.tsv", sep = "\t", header = TRUE, row.names = 1)
+matriz <- read.csv(input_file, sep = "\t", header = TRUE, row.names = 1)
 
 # Reemplazar NA por 0
 matriz[is.na(matriz)] <- 0
 
-# Convertir a matriz
+# Convertir a matriz y formato largo
 matriz <- as.matrix(matriz)
-
-# Convertir la matriz a dataframe en formato largo
 df <- as.data.frame(as.table(matriz))
-
-# Renombrar columnas para claridad
 colnames(df) <- c("Cepa", "Profago", "Valor")
 
 # Invertir el orden de las cepas para la visualización
@@ -42,11 +51,13 @@ colores_subspecies <- c(
 # Crear heatmap con ggplot2
 ggplot(df, aes(x = Profago, y = Cepa)) +
   geom_tile(aes(fill = ifelse(Valor == 1, Subspecies, NA)), color = "white") +
-  scale_fill_manual(values = colores_subspecies,
-                    name = "Subspecies",
-                    limits = names(colores_subspecies),
-                    na.value = "white",
-                    guide = guide_legend(title = "Subspecies")) +
+  scale_fill_manual(
+    values = colores_subspecies,
+    name = "Subspecies",
+    limits = names(colores_subspecies),
+    na.value = "white",
+    guide = guide_legend(title = "Subspecies")
+  ) +
   scale_x_discrete(position = "top") +
   theme_light() +
   theme(
@@ -58,3 +69,6 @@ ggplot(df, aes(x = Profago, y = Cepa)) +
     legend.title = element_text(size = 10, family = "sans")
   ) +
   labs(x = "PROPHAGE", y = "STRAIN")
+
+# Guardar figura
+ggsave("presence_absence_heatmap.png", plot = p, width = 10, height = 8, dpi = 300)
