@@ -59,7 +59,7 @@ for genome in "${INPUT_DIR}"/*.fasta "${INPUT_DIR}"/*.fna; do
     curl -s -o "${OUTPUT_DIR}/${BASENAME}_phastest.gbk" "https://phastest.ca/api/result/${JOB_ID}/gbk"
     curl -s -o "${OUTPUT_DIR}/${BASENAME}_phastest.fasta" "https://phastest.ca/api/result/${JOB_ID}/fasta"
 
-    echo "✅ Results saved for ${BASENAME}"
+    echo "Results saved for ${BASENAME}"
     echo
 done
 
