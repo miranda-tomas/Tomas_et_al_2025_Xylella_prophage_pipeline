@@ -1,5 +1,5 @@
 #!/bin/bash
-# 08_align_integrase_mafft.sh
+# 08_integrase_phylogeny.sh
 # Miranda Tomas
 
 # This script aligns integrase coding sequences using MAFFT 
